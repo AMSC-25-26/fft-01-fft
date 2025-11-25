@@ -7,18 +7,17 @@
 using namespace std::complex_literals;
 
 std::vector<std::complex<double>> prova_fft(const std::vector<std::complex<double>> A) {
-    int N = A.size();
-    double M = 1.0 / N; 
-    
-    if (N == 1) return A;
+    std::complex<double> N = A.size();
+    int n = A.size(); 
+    if (n == 1) return A;
 
-    std::complex<double> Wn = std::exp((-2.0 * M_PI * 1i) * M);
+    std::complex<double> Wn = std::exp((-2.0 * M_PI * 1i) / N);
     std::complex<double> W = 1;
     
     std::vector<std::complex<double>> A_even;
     std::vector<std::complex<double>> A_odd;
     
-    for (int i = 0; i < N / 2; i++) {
+    for (int i = 0; i < n / 2; i++) {
         A_even.emplace_back(A[2 * i]);
         A_odd.emplace_back(A[2 * i + 1]);
     }
@@ -26,14 +25,14 @@ std::vector<std::complex<double>> prova_fft(const std::vector<std::complex<doubl
     std::vector<std::complex<double>> Y_even = prova_fft(A_even);
     std::vector<std::complex<double>> Y_odd = prova_fft(A_odd);
 
-    std::vector<std::complex<double>> Y(N); 
+    std::vector<std::complex<double>> Y(n); 
     
-    for (int j = 0; j < N / 2; j++) {
+    for (int j = 0; j < n / 2; j++) {
         std::complex<double> u = Y_even[j];
         std::complex<double> v = W * Y_odd[j];
         
         Y[j] = u + v;
-        Y[j + N / 2] = u - v;
+        Y[j + n / 2] = u - v;
         W *= Wn;
     }
 
