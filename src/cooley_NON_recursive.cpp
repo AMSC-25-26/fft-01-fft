@@ -6,6 +6,20 @@
 using namespace std;
 using namespace std::complex_literals;
 using namespace Eigen;
+/*
+ * A function to reverse the bits of a given index x.
+ * The idea is to take the lsb of x and append it to
+ * the msb of n
+*/
+unsigned int bitReverse(unsigned int x, int log2n) {
+    int n = 0;
+    for (int i = 0; i < log2n; i++) {
+        n = n << 1;
+        n = n | (x & 1);
+        x = x >> 1;
+    }
+    return n;
+}
 
 MatrixXcd omega_n_half_builder(int N){
     MatrixXcd omega_n_half(N/2, N/2); 
