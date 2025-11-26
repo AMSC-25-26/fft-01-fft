@@ -1,4 +1,5 @@
 #include "FFT.hpp"
+#include "utils.h"
 
 using namespace std::complex_literals;
 using complex = std::complex<double>;
