@@ -8,6 +8,7 @@ class FFT
 {
 public:
     using complex = std::complex<double>;
+    
 
     static std::vector<complex> recursive(const std::vector<complex> A);
     static std::vector<complex> iterative(const std::vector<complex> A);
