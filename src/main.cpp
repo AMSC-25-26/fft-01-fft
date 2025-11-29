@@ -3,37 +3,92 @@
 #include <cmath>
 #include <complex>
 #include <iomanip>
-#include "FFT.cpp"
+#include "FFT.hpp"
 
+std::vector<std::complex<double>> IDFT_Compute(const std::vector<std::complex<double>>& A);
+std::vector<std::complex<double>> DFT_Compute(const std::vector<std::complex<double>>& A);
 
 int main() {
-    std::vector<std::complex<double>> input = {
-        1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0
-    };
+    // Set precision for printing complex numbers
+    std::cout << std::fixed << std::setprecision(4);
 
-    if ((input.size() & (input.size() - 1)) != 0) {
-        std::cerr << "Error: N must be in the form 2^m" << std::endl;
-        return -1;
-    }
-
-    std::cout << "Input Signal (time domain)" << std::endl;
-    for (size_t i = 0; i < input.size(); ++i) {
-        std::cout << "A[" << i << "] = " << input[i] << std::endl;
-    }
-
-    std::vector<std::complex<double>> output = FFT::recursive(input);
-
-    std::cout << "\n Output FFT (frequency domain) ---" << std::endl;
-    std::cout << std::fixed << std::setprecision(3);
+    // TEST 1: Simple 8-point FFT (N=8)
+    int N = 8;
     
-    for (size_t k = 0; k < output.size(); ++k) {
-        double real = std::abs(output[k].real()) < 1e-9 ? 0.0 : output[k].real();
-        double imag = std::abs(output[k].imag()) < 1e-9 ? 0.0 : output[k].imag();
-        
-        std::cout << "Y[" << k << "] = " << real 
-                  << (imag >= 0 ? " + " : " - ") 
-                  << std::abs(imag) << "i" << std::endl;
+    // Define the input signal x = [1, 2, 3, 4, 5, 6, 7, 8] + 0i
+    std::vector<std::complex<double>> input_signal = {
+        {1.0, 0.0}, {2.0, 0.0}, {3.0, 0.0}, {4.0, 0.0}, 
+        {5.0, 0.0}, {6.0, 0.0}, {7.0, 0.0}, {8.0, 0.0}
+    };
+    // Copy for DFT verification
+    std::vector<std::complex<double>> input_signal_dft = input_signal;
+    std::vector<std::complex<double>> input_signal_fft = input_signal;
+
+    std::cout << "--- 8-Point FFT Test ---" << std::endl;
+    std::cout << "Input Signal (x[n]):" << std::endl;
+    for(size_t i = 0; i < N; ++i) {
+        std::cout << "[" << i << "] " << input_signal_fft[i] << "\n";
     }
+    std::cout << "\n";
+
+    // 1. Compute FFT
+    FFT::iterative(input_signal_fft);
+
+    // 2. Compute DFT
+    std::vector<std::complex<double>> result_dft = DFT_Compute(input_signal_dft);
+
+    std::cout << "Results (FFT vs. DFT):" << std::endl;
+    for (int i = 0; i < N; ++i) {
+        // Output format: [k] FFT: (real + imag*i) | DFT: (real + imag*i)
+        std::cout << "[" << i << "] FFT: " << input_signal_fft[i] 
+                  << " | DFT: " << result_dft[i] << "\n";
+    }
+
+    FFT::inverse(input_signal_fft);
+    std::cout << "Results (IFFT vs. INPUT):" << std::endl;
+    for (int i = 0; i < N; ++i) {
+        // Output format: [k] FFT: (real + imag*i) | DFT: (real + imag*i)
+        std::cout << "[" << i << "] IFFT: " << input_signal_fft[i] 
+                  << " | INPUT: " << input_signal[i] << "\n";
+    }
+    
+    std::cout << "\nVerification:\n";
+    std::cout << "The FFT results should match the DFT results (within floating-point error)." << std::endl;
+    std::cout << "The IFFT results should match the input signal (within floating-point error)." << std::endl;
 
     return 0;
+}
+
+const std::complex<double> I(0.0, 1.0);
+
+std::vector<std::complex<double>> IDFT_Compute(const std::vector<std::complex<double>>& A) {
+    int N = A.size();
+    std::vector<std::complex<double>> X(N);
+
+    for (int k = 0; k < N; k++) {
+        X[k] = 0.0;
+        for (int n = 0; n < N; n++) {
+            double exponent = 2.0 * M_PI * (double)(k * n) / (double)N;
+            std::complex<double> W = std::exp(I * exponent);
+            X[k] += A[n] * W;
+        }
+        X[k] /= N;
+    }
+
+    return X;
+}
+
+std::vector<std::complex<double>> DFT_Compute(const std::vector<std::complex<double>>& A) {
+    int N = A.size();
+    std::vector<std::complex<double>> X(N);
+
+    for (int k = 0; k < N; k++) {
+        X[k] = 0.0;
+        for (int n = 0; n < N; n++) {
+            double exponent = -2.0 * M_PI * (double)(k * n) / (double)N;
+            std::complex<double> W = std::exp(I * exponent);
+            X[k] += A[n] * W;
+        }
+    }
+    return X;
 }
