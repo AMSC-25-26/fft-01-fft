@@ -8,7 +8,7 @@
 
 const std::complex<double> I(0.0, 1.0); // Define i
 
-void fft_nonrecursive(std::vector<std::complex<double>> A) {
+void fft_nonrecursive(std::vector<std::complex<double>>& A) {
     int N = A.size();
     if (N == 0 || (N & (N - 1)) != 0) {
         throw std::invalid_argument("Input vector size must be a power of two.");
