@@ -40,86 +40,79 @@ std::vector<std::complex<double>> FFT::recursive(const std::vector<std::complex<
 const std::complex<double> I(0.0, 1.0);
 
 void FFT::iterative(std::vector<std::complex<double>>& A) {
-    int N = A.size();
+    size_t N = A.size();
     if (N == 0 || (N & (N - 1)) != 0) {
         throw std::invalid_argument("Input vector size must be a power of two.");
     }
+
+    double theta = -2 * M_PI;
+    int log2N = static_cast<int>(std::log2(N));
+
     applyBitReversalPermutation(A);
 
-    int k = 2; 
-    while (k <= N) { 
-        int separation = k / 2; 
-        int num_blocks = N / k; 
+     // We iterate for log2(N) steps
+    for (int k = 1; k <= log2N; ++k) { 
+        int m = 1 << k; // 2^k So 
+        int m2 = m >> 1; // m / 2 - equivalent to the separation used before
 
-        for (int r = 0; r < num_blocks; ++r) {
-            int block_start_index = r * k; 
-            
+        // Principle root of nth complex
+        // root of unity. We compute it once!
+        // Then we build each twiddle using
+        // the powers of it
+        std::complex<double> wm = std::polar(1.0, theta / static_cast<double> (m)); // e^-(i*2*PI) / (2^k)
 
-            for (int j = 0; j < separation; ++j) {
-
-            
-                int top_idx    = block_start_index + j;
-                int bottom_idx = block_start_index + j + separation;
-
+        // We iterate over the blocks
+        for (size_t r = 0; r < N; r += m) {
+            std::complex<double> w{1.0, 0};
+            for (size_t j = 0; j < m2; ++j) {    
+                std::complex<double> X_top_old = A[r + j];
+                std::complex<double> T = w * A[r + j + m2];
                
-                double exponent_val = -2.0 * M_PI * (double)j / (double)k;
-                std::complex<double> W_k_j = std::exp(I * exponent_val); //defining  
-
-                
-                std::complex<double> X_top_old = A[top_idx];
-                
-             
-                std::complex<double> T = W_k_j * A[bottom_idx];
-                
-               
-                A[bottom_idx] = X_top_old - T;
-
-                
-                A[top_idx] = X_top_old + T; 
+                A[r + j + m2] = X_top_old - T;
+                A[r + j] = X_top_old + T;
+                w *= wm; // constructing e^(-2pi/k)^j
             }
-        }
-        
-        k *= 2; 
+        }         
     }
 }
 
 void FFT::inverse(std::vector<std::complex<double>>& A) {
-    int N = A.size();
+    size_t N = A.size();
     if (N == 0 || (N & (N - 1)) != 0) {
         throw std::invalid_argument("Input vector size must be a power of two.");
     }
 
+    double theta = 2 * M_PI;
+    int log2N = static_cast<int>(std::log2(N));
+
     applyBitReversalPermutation(A);     //reorders the input array in bit-reversed order to avoid recursion 
 
-    int k = 2; 
-    while (k <= N) { 
-        int separation = k / 2; 
-        int num_blocks = N / k; 
+    for (int k = 1; k <= log2N; ++k) { 
+        int m = 1 << k; // 2^k So 
+        int m2 = m >> 1; // m / 2 - equivalent to the separation used before
 
-        for (int r = 0; r < num_blocks; ++r) {
-            int block_start_index = r * k; 
+        // Principle root of nth complex
+        // root of unity. We compute it once!
+        // Then we build each twiddle using
+        // the powers of it
+        std::complex<double> wm = std::polar(1.0, theta / static_cast<double> (m)); // e^-(i*2*PI) / (2^k)
 
-            for (int j = 0; j < separation; ++j) {
-            
-                int top_idx    = block_start_index + j;
-                int bottom_idx = block_start_index + j + separation;
+        // We iterate over the blocks
+        for (size_t r = 0; r < N; r += m) {
+            std::complex<double> w{1.0, 0};
+            for (size_t j = 0; j < m2; ++j) {    
+                std::complex<double> X_top_old = A[r + j];
+                std::complex<double> T = w * A[r + j + m2];
                
-                double exponent_val = 2.0 * M_PI * (double)j / (double)k;   // sign change
-                std::complex<double> W_k_j = std::exp(I * exponent_val); 
-                
-                std::complex<double> X_top_old = A[top_idx];
-                std::complex<double> T = W_k_j * A[bottom_idx];
-               
-                A[bottom_idx] = X_top_old - T;
-                A[top_idx] = X_top_old + T; 
+                A[r + j + m2] = X_top_old - T;
+                A[r + j] = X_top_old + T;
+                w *= wm; // constructing e^(2pi/k)^j
             }
-        }
-        
-        k *= 2; 
+        }         
     }
     
     // normalization 
-    for (int i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         A[i] /= N;
 
     }
