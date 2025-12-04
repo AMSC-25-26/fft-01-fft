@@ -1,5 +1,6 @@
 #include "FFT.hpp"
 #include "utils.h"
+#include <omp.h>
 
 using namespace std::complex_literals;
 using complex = std::complex<double>;
@@ -63,8 +64,7 @@ void FFT::iterative(std::vector<std::complex<double>>& A) {
 
                
                 double exponent_val = -2.0 * M_PI * (double)j / (double)k;
-                std::complex<double> W_k_j = std::exp(I * exponent_val); //defining  
-
+ 
                 
                 std::complex<double> X_top_old = A[top_idx];
                 
@@ -124,3 +124,60 @@ void FFT::inverse(std::vector<std::complex<double>>& A) {
 
     }
 }
+
+
+void FFT::parallel_iterative(std::vector<std::complex<double>>& A) {
+    int N = A.size();
+    if (N == 0 || (N & (N - 1)) != 0) {
+        throw std::invalid_argument("Input vector size must be a power of two.");
+    }
+
+    double wtime = omp_get_wtime();
+
+    applyBitReversalPermutation(A);
+    
+
+
+    int k = 2; 
+    while (k <= N) { 
+        int separation = k / 2; 
+        int num_blocks = N / k; 
+
+        
+        #pragma omp parallel for schedule(static)
+        for (int r = 0; r < num_blocks; ++r) {
+            int block_start_index = r * k; 
+            
+
+            for (int j = 0; j < separation; ++j) {
+
+            
+                int top_idx    = block_start_index + j;
+                int bottom_idx = block_start_index + j + separation;
+
+               
+                double exponent_val = -2.0 * M_PI * (double)j / (double)k;
+                std::complex<double> W_k_j = std::exp(I * exponent_val); //defining  
+
+                
+                std::complex<double> X_top_old = A[top_idx];
+                
+             
+                std::complex<double> T = W_k_j * A[bottom_idx];
+                
+               
+                A[bottom_idx] = X_top_old - T;
+
+                
+                A[top_idx] = X_top_old + T; 
+            }
+        }
+        
+        k *= 2; 
+    }
+
+    
+    wtime = omp_get_wtime() - wtime;
+    std::cout << "Parallel FFT Execution Time: " << wtime << " seconds" << std::endl;
+}
+

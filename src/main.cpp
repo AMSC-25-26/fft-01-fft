@@ -24,6 +24,8 @@ int main() {
     std::vector<std::complex<double>> input_signal_dft = input_signal;
     std::vector<std::complex<double>> input_signal_fft = input_signal;
 
+    
+
     std::cout << "--- 8-Point FFT Test ---" << std::endl;
     std::cout << "Input Signal (x[n]):" << std::endl;
     for(size_t i = 0; i < N; ++i) {
@@ -31,6 +33,7 @@ int main() {
     }
     std::cout << "\n";
 
+    /*
     // 1. Compute FFT
     FFT::iterative(input_signal_fft);
 
@@ -51,6 +54,11 @@ int main() {
         std::cout << "[" << i << "] IFFT: " << input_signal_fft[i] 
                   << " | INPUT: " << input_signal[i] << "\n";
     }
+
+    */
+
+    // 1. Compute Parallel FFT
+    FFT::parallel_iterative(input_signal_fft);
     
     std::cout << "\nVerification:\n";
     std::cout << "The FFT results should match the DFT results (within floating-point error)." << std::endl;
@@ -58,7 +66,7 @@ int main() {
 
     return 0;
 }
-
+ 
 const std::complex<double> I(0.0, 1.0);
 
 std::vector<std::complex<double>> IDFT_Compute(const std::vector<std::complex<double>>& A) {
