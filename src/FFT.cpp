@@ -16,7 +16,11 @@ std::vector<std::complex<double>> recursive(const std::vector<std::complex<doubl
     std::complex<double> W = 1;
     
     std::vector<std::complex<double>> A_even;
+    A_even.reserve(n/2);
     std::vector<std::complex<double>> A_odd;
+    A_odd.reserve(n/2);
+
+
     
     for (int i = 0; i < n / 2; i++) {
         A_even.emplace_back(A[2 * i]);
