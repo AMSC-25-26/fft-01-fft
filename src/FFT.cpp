@@ -7,31 +7,67 @@ using complex = std::complex<double>;
 
 namespace FFT
 {
+/**
+ * Recursive version of the Cooley-Tukey FFT Algorithm
+ * @note    The input vector's size must be a power of 2. 
+ * @param A The input vector which represents the sampled 
+ *          values of an arbitrary signal (time domain). 
+ * 
+ * @return  The vector of coefficients yielded from the 
+ *          Discrete Fourier Transform of the input signal (frequency domain). 
+ */
 std::vector<std::complex<double>> recursive(const std::vector<std::complex<double>> &A) {
+    /**
+     * Size of the input vector in the complex set. 
+     */
     std::complex<double> N = A.size();
+
+    /**
+     * Size of the input vector in the real set. 
+     */
     int n = A.size(); 
+
+    /**
+     * Base case: stopping criteria of the recursive iteration. 
+     */ 
     if (n == 1) return A;
 
+    /**
+     * Principal N-th root of unity
+     */
     std::complex<double> Wn = std::exp((-2.0 * M_PI * 1i) / N);
+
+    /**
+     * Current twiddle factor. 
+     * Initialized to 1 (angle of 0 degrees)
+     */
     std::complex<double> W = 1;
-    
+
+    /**
+     * Declaration of two empty vectors for the Divide Et Impera procedure. 
+     * 1. A_even: coefficients corresponding to the even indices
+     * 2. A_odd:  coefficients corresponding to the odd indices           
+     */
     std::vector<std::complex<double>> A_even;
     A_even.reserve(n/2);
     std::vector<std::complex<double>> A_odd;
     A_odd.reserve(n/2);
 
-
-    
     for (int i = 0; i < n / 2; i++) {
         A_even.emplace_back(A[2 * i]);
         A_odd.emplace_back(A[2 * i + 1]);
     }
 
+    /**
+     * Recursive step
+     */
     std::vector<std::complex<double>> Y_even = recursive(A_even);
     std::vector<std::complex<double>> Y_odd = recursive(A_odd);
 
+    /**
+     * Merging phase: recombining the results using the Butterfly operations
+     */
     std::vector<std::complex<double>> Y(n); 
-    
     for (int j = 0; j < n / 2; j++) {
         std::complex<double> u = Y_even[j];
         std::complex<double> v = W * Y_odd[j];
@@ -44,10 +80,15 @@ std::vector<std::complex<double>> recursive(const std::vector<std::complex<doubl
     return Y;
 }
 
+/**
+ * Iterative version of the Cooley-Tukey FFT Algorithm.
+ * @param A The input vector which represents the sampled 
+ *          values of an arbitrary signal (time domain). 
+ * 
+ * @return  The vector of coefficients yielded from the 
+ *          Discrete Fourier Transform of the input signal (frequency domain). 
+ */
 void iterative(std::vector<std::complex<double>>& A) {
-    /**
-     * Iterative Cooley-Tukey Fast Fourier Transform Algorithm.
-     */
     const size_t N = A.size();
     if (N == 0 || (N & (N - 1)) != 0) {
         throw std::invalid_argument("Input vector size must be a power of two.");
@@ -143,10 +184,15 @@ void iterative(std::vector<std::complex<double>>& A) {
     }
 }
 
+/**
+ * Iterative version of the Cooley-Tukey Inverse FFT Algorithm.
+ * @param A The input vector which represents the DFT coefficients 
+ *          of an arbitrary signal (frequency domain). 
+ * 
+ * @return  The vector of coefficients yielded from the 
+ *          inverse FFT of the input signal (time domain). 
+ */
 void inverse(std::vector<std::complex<double>>& A) {
-    /**
-     * Iterative Cooley-Tukey Inverse Fast Fourier Transform Algorithm.
-     */
     const size_t N = A.size();
     if (N == 0 || (N & (N - 1)) != 0) {
         throw std::invalid_argument("Input vector size must be a power of two.");
@@ -183,10 +229,12 @@ void inverse(std::vector<std::complex<double>>& A) {
 }
 
 
+/**
+ * Parallel implementation of the Cooley-Tukey FFT Algorithm.
+ * @param A The input vector which represents the sampled 
+ *          values of an arbitrary signal (time domain). 
+ */
 void parallel_iterative(std::vector<std::complex<double>>& A) {
-    /**
-     * Parallel Cooley-Tukey Fast Fourier Transform Algorithm.
-     */
     const size_t N = A.size();
     if (N == 0 || (N & (N - 1)) != 0) {
         throw std::invalid_argument("Input vector size must be a power of two.");
@@ -224,10 +272,12 @@ void parallel_iterative(std::vector<std::complex<double>>& A) {
     }
 }
 
+/**
+ * Parallel implementation of the Cooley-Tukey Inverse FFT Algorithm.
+ * @param A The input vector which represents the DFT coefficients 
+ *          of an arbitrary signal (frequency domain). 
+ */
 void parallel_inverse(std::vector<std::complex<double>>& A) {
-    /**
-     * Parallel Cooley-Tukey Inverse Fast Fourier Transform Algorithm.
-     */
     const size_t N = A.size();
     if (N == 0 || (N & (N - 1)) != 0) {
         throw std::invalid_argument("Input vector size must be a power of two.");
