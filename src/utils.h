@@ -13,7 +13,7 @@ unsigned int bitReverse(unsigned int x, int log2n) {
 
 template <typename T>
 void applyBitReversalPermutation(std::vector<T>& input_vector) {
-    int N = input_vector.size();
+    const size_t N = input_vector.size();
     
    
     int log2n = 0;

@@ -97,7 +97,7 @@ void iterative(std::vector<std::complex<double>>& A) {
          * Again we use the bitwise shift operator to 
          * quickly compute the division by 2. 
          */
-        const int mid = m >> 1;
+        const size_t mid = m >> 1;
 
         /**
          * Precompute the twiddle factor. This avoids
@@ -159,7 +159,7 @@ void inverse(std::vector<std::complex<double>>& A) {
 
     for (int k = 1; k <= log2N; ++k) { 
         const int m = 1 << k; 
-        const int m2 = m >> 1; 
+        const size_t m2 = m >> 1; 
 
         std::complex<double> wm = std::polar(1.0, theta / static_cast<double> (m)); 
 
@@ -199,7 +199,7 @@ void parallel_iterative(std::vector<std::complex<double>>& A) {
 
     for (int k = 1; k <= log2N; ++k) { 
         const int m = 1 << k; 
-        const int mid = m >> 1;
+        const size_t mid = m >> 1;
 
         std::complex<double> wm = std::polar(1.0, theta / static_cast<double> (m));
 
@@ -240,7 +240,7 @@ void parallel_inverse(std::vector<std::complex<double>>& A) {
 
     for (int k = 1; k <= log2N; ++k) { 
         const int m = 1 << k;
-        const int mid = m >> 1;
+        const size_t mid = m >> 1;
 
         std::complex<double> wm = std::polar(1.0, theta / static_cast<double> (m));
 

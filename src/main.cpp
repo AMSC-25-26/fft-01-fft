@@ -13,7 +13,7 @@ int main() {
     std::cout << std::fixed << std::setprecision(4);
 
     // TEST 1: Simple 8-point FFT (N=8)
-    int N = 8;
+    const size_t N = 8;
     
     // Define the input signal x = [1, 2, 3, 4, 5, 6, 7, 8] + 0i
     std::vector<std::complex<double>> input_signal = {
@@ -38,7 +38,7 @@ int main() {
     std::vector<std::complex<double>> result_dft = DFT_Compute(input_signal_dft);
 
     std::cout << "Results (FFT vs. DFT):" << std::endl;
-    for (int i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         // Output format: [k] FFT: (real + imag*i) | DFT: (real + imag*i)
         std::cout << "[" << i << "] FFT: " << input_signal_fft[i] 
                   << " | DFT: " << result_dft[i] << "\n";
@@ -46,7 +46,7 @@ int main() {
 
     FFT::parallel_inverse(input_signal_fft);
     std::cout << "Results (IFFT vs. INPUT):" << std::endl;
-    for (int i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         // Output format: [k] FFT: (real + imag*i) | DFT: (real + imag*i)
         std::cout << "[" << i << "] IFFT: " << input_signal_fft[i] 
                   << " | INPUT: " << input_signal[i] << "\n";
@@ -62,12 +62,12 @@ int main() {
 const std::complex<double> I(0.0, 1.0);
 
 std::vector<std::complex<double>> IDFT_Compute(const std::vector<std::complex<double>>& A) {
-    int N = A.size();
+    const size_t N = A.size();
     std::vector<std::complex<double>> X(N);
 
-    for (int k = 0; k < N; k++) {
+    for (size_t k = 0; k < N; k++) {
         X[k] = 0.0;
-        for (int n = 0; n < N; n++) {
+        for (size_t n = 0; n < N; n++) {
             double exponent = 2.0 * M_PI * (double)(k * n) / (double)N;
             std::complex<double> W = std::exp(I * exponent);
             X[k] += A[n] * W;
@@ -79,12 +79,12 @@ std::vector<std::complex<double>> IDFT_Compute(const std::vector<std::complex<do
 }
 
 std::vector<std::complex<double>> DFT_Compute(const std::vector<std::complex<double>>& A) {
-    int N = A.size();
+    size_t N = A.size();
     std::vector<std::complex<double>> X(N);
 
-    for (int k = 0; k < N; k++) {
+    for (size_t k = 0; k < N; k++) {
         X[k] = 0.0;
-        for (int n = 0; n < N; n++) {
+        for (size_t n = 0; n < N; n++) {
             double exponent = -2.0 * M_PI * (double)(k * n) / (double)N;
             std::complex<double> W = std::exp(I * exponent);
             X[k] += A[n] * W;
