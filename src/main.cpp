@@ -3,28 +3,47 @@
 #include <cmath>
 #include <complex>
 #include <iomanip>
+#include <random>
 #include "FFT.hpp"
 
-std::vector<std::complex<double>> IDFT_Compute(const std::vector<std::complex<double>>& A);
-std::vector<std::complex<double>> DFT_Compute(const std::vector<std::complex<double>>& A);
+using complex = std::complex<double>; 
+using complexVector = std::vector<complex>; 
 
-int main() {
-    // Set precision for printing complex numbers
+complexVector IDFT_Compute(const complexVector& A);
+complexVector DFT_Compute(const complexVector& A);
+void test_polynomial_multiplication(size_t n1, size_t n2); 
+
+int main(int argc, char* argv[]) {
+    if(argc < 2){
+        std::cerr << "Use: <int> <int>" << std::endl; 
+        return -1; 
+    }
+
+    /**
+     *  Set precision for printing complex numbers
+     */
     std::cout << std::fixed << std::setprecision(4);
 
-    // TEST 1: Simple 8-point FFT (N=8)
+    /** 
+     * TEST 1: Simple 8-point FFT (N=8) 
+    */
     const size_t N = 8;
     
-    // Define the input signal x = [1, 2, 3, 4, 5, 6, 7, 8] + 0i
+    /**
+     *  Define the input signal x = [1, 2, 3, 4, 5, 6, 7, 8] + 0i
+     */
     std::vector<std::complex<double>> input_signal = {
         {1.0, 0.0}, {2.0, 0.0}, {3.0, 0.0}, {4.0, 0.0}, 
         {5.0, 0.0}, {6.0, 0.0}, {7.0, 0.0}, {8.0, 0.0}
     };
-    // Copy for DFT verification
+    
+    /**
+     * Copy for DFT verification
+     */
     std::vector<std::complex<double>> input_signal_dft = input_signal;
     std::vector<std::complex<double>> input_signal_fft = input_signal;
 
-    std::cout << "--- 8-Point FFT Test ---" << std::endl;
+    std::cout << "=== 8-Point FFT Test ===" << std::endl;
     std::cout << "Input Signal (x[n]):" << std::endl;
     for(size_t i = 0; i < N; ++i) {
         std::cout << "[" << i << "] " << input_signal_fft[i] << "\n";
@@ -115,14 +134,96 @@ int main() {
                   << std::setw(15) << error << "\n";
     }
 
+    /**
+     * Polynomial multiplication test
+     */
+    int n1 = atoi(argv[1]); 
+    int n2 = atoi(argv[2]); 
+    test_polynomial_multiplication(n1, n2); 
+    
+
     return 0;
 }
  
 const std::complex<double> I(0.0, 1.0);
 
-std::vector<std::complex<double>> IDFT_Compute(const std::vector<std::complex<double>>& A) {
+std::vector<complex> generate_random_polynomial(size_t n)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(-10.0, 10.0);
+    
+    std::vector<complex> poly(n);
+    for(size_t i = 0; i < n; ++i) {
+        poly[i] = {dis(gen), 0.0}; 
+    }
+    return poly;
+}
+
+size_t next_power_of_two(size_t n) {
+    size_t power = 1;
+    while (power < n) {
+        power <<= 1;
+    }
+    return power;
+}
+
+complexVector naive_polynomial_multiplication(const complexVector& p1, const complexVector& p2)
+{
+    size_t n1 = p1.size();
+    size_t n2 = p2.size(); 
+    size_t nC = n1 + n2 - 1; 
+    
+    complexVector C(nC, {0.0, 0.0}); 
+
+    for(size_t i = 0; i < n1; ++i) {
+        for(size_t j = 0; j < n2; ++j) {
+            C[i + j] += p1[i] * p2[j];
+        }
+    }
+    
+    return C; 
+}
+
+bool same_polynomial(complexVector p1, complexVector p2)
+{
+    size_t n1 = p1.size(), n2 = p2.size(); 
+    if(n1 != n2) 
+        return false;
+    for(size_t i = 0; i < n1; ++i)
+        if(double(abs(p1[i].real() - p2[i].real())) > 1.0e-12)
+            return false; 
+
+    return true; 
+}
+
+void test_polynomial_multiplication(size_t n1, size_t n2)
+{
+    complexVector poly1 = generate_random_polynomial(n1);    
+    complexVector poly2 = generate_random_polynomial(n2);    
+    complexVector naiveC = naive_polynomial_multiplication(poly1, poly2); 
+    
+    size_t final_size = n1 + n2 - 1; 
+    size_t nC = next_power_of_two(final_size); 
+    poly1.resize(nC, {0, 0}); 
+    poly2.resize(nC, {0, 0}); 
+    FFT::parallel_iterative(poly1); 
+    FFT::parallel_iterative(poly2); 
+
+    complexVector C(nC); 
+    for(size_t i = 0; i < nC; ++i)
+        C[i] = poly1[i] * poly2[i];     
+
+    FFT::parallel_inverse(C); 
+
+    C.resize(nC); 
+    std::cout << (same_polynomial(C, naiveC) ? "Same polynomial - FFT Success" : "Not same polynomial - FFT Failed!") << std::endl; 
+}
+
+
+std::vector<complex> IDFT_Compute(const std::vector<complex>& A) {
     const size_t N = A.size();
-    std::vector<std::complex<double>> X(N);
+    std::vector<complex> X(N);
 
     for (size_t k = 0; k < N; k++) {
         X[k] = 0.0;
@@ -151,3 +252,4 @@ std::vector<std::complex<double>> DFT_Compute(const std::vector<std::complex<dou
     }
     return X;
 }
+

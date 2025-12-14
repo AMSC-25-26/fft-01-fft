@@ -3,7 +3,6 @@
 #include <omp.h>
 
 using namespace std::complex_literals;
-using complex = std::complex<double>;
 
 namespace FFT
 {
@@ -16,11 +15,11 @@ namespace FFT
  * @return  The vector of coefficients yielded from the 
  *          Discrete Fourier Transform of the input signal (frequency domain). 
  */
-std::vector<std::complex<double>> recursive(const std::vector<std::complex<double>> &A) {
+std::vector<complex> recursive(const std::vector<complex> &A) {
     /**
      * Size of the input vector in the complex set. 
      */
-    std::complex<double> N = A.size();
+    complex N = A.size();
 
     /**
      * Size of the input vector in the real set. 
@@ -35,7 +34,7 @@ std::vector<std::complex<double>> recursive(const std::vector<std::complex<doubl
     /**
      * Principal N-th root of unity
      */
-    std::complex<double> Wn = std::exp((-2.0 * M_PI * 1i) / N);
+    complex Wn = std::exp((-2.0 * M_PI * 1i) / N);
 
     /**
      * Current twiddle factor. 
