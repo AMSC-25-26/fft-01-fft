@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     /**
      *  Define the input signal x = [1, 2, 3, 4, 5, 6, 7, 8] + 0i
      */
-    std::vector<std::complex<double>> input_signal = {
+    complexVector input_signal = {
         {1.0, 0.0}, {2.0, 0.0}, {3.0, 0.0}, {4.0, 0.0}, 
         {5.0, 0.0}, {6.0, 0.0}, {7.0, 0.0}, {8.0, 0.0}
     };
@@ -40,8 +40,8 @@ int main(int argc, char* argv[]) {
     /**
      * Copy for DFT verification
      */
-    std::vector<std::complex<double>> input_signal_dft = input_signal;
-    std::vector<std::complex<double>> input_signal_fft = input_signal;
+    complexVector input_signal_dft = input_signal;
+    complexVector input_signal_fft = input_signal;
 
     std::cout << "=== 8-Point FFT Test ===" << std::endl;
     std::cout << "Input Signal (x[n]):" << std::endl;
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
     FFT::parallel_iterative(input_signal_fft);
 
     // 2. Compute DFT
-    std::vector<std::complex<double>> result_dft = DFT_Compute(input_signal_dft);
+    complexVector result_dft = DFT_Compute(input_signal_dft);
 
     std::cout << "Results (FFT vs. DFT):" << std::endl;
     for (size_t i = 0; i < N; ++i) {
@@ -96,14 +96,14 @@ int main(int argc, char* argv[]) {
     };
 
     // sample the function
-    std::vector<std::complex<double>> sampled_signal(N2);
+    complexVector sampled_signal(N2);
     for (size_t n = 0; n < N2; n++) {
         double t = n * dt;
         sampled_signal[n] = std::complex<double>(func(t), 0.0);
     }
 
     // compute fft
-    std::vector<std::complex<double>> fft_result = sampled_signal;
+    complexVector fft_result = sampled_signal;
     FFT::parallel_iterative(fft_result); 
     
     
@@ -137,17 +137,17 @@ int main(int argc, char* argv[]) {
     /**
      * Polynomial multiplication test
      */
-    int n1 = atoi(argv[1]); 
-    int n2 = atoi(argv[2]); 
+    std::cout << "\n=== POLYNOMIAL MULTIPLICATION TEST ===" << std::endl; 
+    const size_t n1 = atoi(argv[1]); 
+    const size_t n2 = atoi(argv[2]); 
     test_polynomial_multiplication(n1, n2); 
     
-
     return 0;
 }
  
 const std::complex<double> I(0.0, 1.0);
 
-std::vector<complex> generate_random_polynomial(size_t n)
+complexVector generate_random_polynomial(size_t n)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -176,12 +176,10 @@ complexVector naive_polynomial_multiplication(const complexVector& p1, const com
     
     complexVector C(nC, {0.0, 0.0}); 
 
-    for(size_t i = 0; i < n1; ++i) {
-        for(size_t j = 0; j < n2; ++j) {
+    for(size_t i = 0; i < n1; ++i) 
+        for(size_t j = 0; j < n2; ++j) 
             C[i + j] += p1[i] * p2[j];
-        }
-    }
-    
+        
     return C; 
 }
 
@@ -195,6 +193,19 @@ bool same_polynomial(complexVector p1, complexVector p2)
             return false; 
 
     return true; 
+}
+
+void print_polynomial(complexVector p)
+{
+    const size_t N = p.size(); 
+    if(N > 0) 
+    {
+        std::cout << p[0].real() << " + "; 
+        for(size_t i = 1; i < N-1; ++i)
+            std::cout << p[i].real() << "x^" << i << " + "; 
+        
+        std::cout << p[N-1].real() << std::endl; 
+    }
 }
 
 void test_polynomial_multiplication(size_t n1, size_t n2)
@@ -217,19 +228,23 @@ void test_polynomial_multiplication(size_t n1, size_t n2)
     FFT::parallel_inverse(C); 
 
     C.resize(nC); 
+    std::cout << "FFT multiplication resulting polynomial: " << std::endl; 
+    print_polynomial(C); 
+    std::cout << "Naive multiplication resulting polynomial: " << std::endl; 
+    print_polynomial(naiveC); 
     std::cout << (same_polynomial(C, naiveC) ? "Same polynomial - FFT Success" : "Not same polynomial - FFT Failed!") << std::endl; 
 }
 
 
-std::vector<complex> IDFT_Compute(const std::vector<complex>& A) {
+complexVector IDFT_Compute(const complexVector& A) {
     const size_t N = A.size();
-    std::vector<complex> X(N);
+    complexVector X(N);
 
     for (size_t k = 0; k < N; k++) {
         X[k] = 0.0;
         for (size_t n = 0; n < N; n++) {
             double exponent = 2.0 * M_PI * (double)(k * n) / (double)N;
-            std::complex<double> W = std::exp(I * exponent);
+            complex W = std::exp(I * exponent);
             X[k] += A[n] * W;
         }
         X[k] /= N;
@@ -238,15 +253,15 @@ std::vector<complex> IDFT_Compute(const std::vector<complex>& A) {
     return X;
 }
 
-std::vector<std::complex<double>> DFT_Compute(const std::vector<std::complex<double>>& A) {
+complexVector DFT_Compute(const complexVector& A) {
     size_t N = A.size();
-    std::vector<std::complex<double>> X(N);
+    complexVector X(N);
 
     for (size_t k = 0; k < N; k++) {
         X[k] = 0.0;
         for (size_t n = 0; n < N; n++) {
             double exponent = -2.0 * M_PI * (double)(k * n) / (double)N;
-            std::complex<double> W = std::exp(I * exponent);
+            complex W = std::exp(I * exponent);
             X[k] += A[n] * W;
         }
     }
