@@ -227,7 +227,7 @@ void test_polynomial_multiplication(size_t n1, size_t n2)
 
     FFT::parallel_inverse(C); 
 
-    C.resize(nC); 
+    C.resize(final_size); 
     std::cout << "FFT multiplication resulting polynomial: " << std::endl; 
     print_polynomial(C); 
     std::cout << "Naive multiplication resulting polynomial: " << std::endl; 
