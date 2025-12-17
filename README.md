@@ -7,9 +7,7 @@ In this project, we implemented the **Fast Fourier Transform (FFT)** algorithm t
 We present:
 - a **recursive FFT implementation**,
 - an **iterative FFT implementation**,
-- a **parallelized version** of the iterative algorithm,
-
-for both the forward and inverse transforms.
+- a **parallelized version** of the iterative algorithm, for both the forward and inverse transforms.
 
 The project is developed in **C++**.
 
@@ -26,7 +24,7 @@ To build and run the project, you need:
 
 ```bash
 git clone https://github.com/AMSC-25-26/fft-01-fft.git
-cd fft-01-fft
+cd PATH/TO/fft-01-fft
 ```
 
 **2. Create the build directory** 
@@ -53,7 +51,7 @@ The executable requires **two integer arguments**:
 ./fft <n1> <n2>
 ```
 
-The **input** parameters `n1` and `n2` represent the sizes of the two polynomials
+The **input** parameters `n1` and `n2` represent the degrees of the two polynomials
 used in the final test, which performs polynomial multiplication using FFT.
 
 The **output** produced by the execution consists of the results of some tests performed by the program:
