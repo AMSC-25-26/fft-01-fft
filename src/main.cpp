@@ -13,45 +13,66 @@
 using complex = std::complex<double>; 
 using complexVector = std::vector<complex>; 
 
-complexVector IDFT_Compute(const complexVector& A);
-complexVector DFT_Compute(const complexVector& A);
-void test_polynomial_multiplication(size_t n1, size_t n2); 
+complexVector IDFT_Compute(const complexVector&);
+complexVector DFT_Compute(const complexVector&);
+void test_polynomial_multiplication(size_t, size_t); 
+void test_n_point(size_t); 
+void test_math_function(size_t); 
 
 int main(int argc, char* argv[]) {
-    if(argc < 2){
-        std::cerr << "Use: <int> <int>" << std::endl; 
+    if(argc < 4){
+        std::cerr << "Use: <int> <int> <int>" << std::endl; 
         return -1; 
     }
 
-    /**
-     *  Set precision for printing complex numbers
-     */
-    std::cout << std::fixed << std::setprecision(4);
+    // ====== TEST 1: Simple N-point FFT ======
+    const size_t N = atoi(argv[1]); 
+    test_n_point(N); 
 
-    /** 
-     * TEST 1: Simple 8-point FFT (N=8) 
-    */
-    const size_t N = 8;
+    // ====== TEST 2: Mathematical Function Transformation ======
+    const size_t Nc = atoi(argv[2]); 
+    test_math_function(Nc); 
     
-    /**
-     *  Define the input signal x = [1, 2, 3, 4, 5, 6, 7, 8] + 0i
-     */
-    complexVector input_signal = {
-        {1.0, 0.0}, {2.0, 0.0}, {3.0, 0.0}, {4.0, 0.0}, 
-        {5.0, 0.0}, {6.0, 0.0}, {7.0, 0.0}, {8.0, 0.0}
-    };
+    // ====== TEST 3: Polynomial Multiplication ======
+    const size_t n1 = atoi(argv[3]); 
+    const size_t n2 = atoi(argv[4]); 
+    test_polynomial_multiplication(n1, n2); 
     
-    /**
-     * Copy for DFT verification
-     */
+
+    return 0;
+}
+ 
+
+const std::complex<double> I(0.0, 1.0);
+
+// ========= TEST 1 =========
+complexVector generate_random_signal(size_t N)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(-10.0, 10.0);
+    
+    complexVector signal(N);
+    for(size_t i = 0; i < N; ++i) 
+        signal[i] = {dis(gen), dis(gen)}; 
+
+    return signal;
+}
+
+void test_n_point(size_t N)
+{
+    std::cout << std::fixed << std::setprecision(12);
+    
+    complexVector input_signal = generate_random_signal(N); 
     complexVector input_signal_dft = input_signal;
     complexVector input_signal_fft = input_signal;
 
-    std::cout << "=== 8-Point FFT Test ===" << std::endl;
+    std::cout << "====== N-Point FFT Test ======" << std::endl;
     std::cout << "Input Signal (x[n]):" << std::endl;
-    for(size_t i = 0; i < N; ++i) {
-        std::cout << "[" << i << "] " << input_signal_fft[i] << "\n";
-    }
+    for(size_t i = 0; i < N; ++i)
+        std::cout << "[" << i << "] " << std::setw(10)
+        << input_signal_fft[i].real() << " + " << " i(" << input_signal_fft[i].imag() << ")" << "\n";
+    
     std::cout << "\n";
 
     // 1. Compute FFT
@@ -61,34 +82,59 @@ int main(int argc, char* argv[]) {
     complexVector result_dft = DFT_Compute(input_signal_dft);
 
     std::cout << "Results (FFT vs. DFT):" << std::endl;
+
+    std::cout << std::fixed << std::setprecision(6);
     for (size_t i = 0; i < N; ++i) {
-        // Output format: [k] FFT: (real + imag*i) | DFT: (real + imag*i)
-        std::cout << "[" << i << "] FFT: " << input_signal_fft[i]
-                  << "\t| DFT: " << result_dft[i] << "\n";
+        std::cout << "[" << std::setw(2) << i << "] ";
+        std::cout << "FFT: ";
+        std::cout << std::setw(12) << input_signal_fft[i].real() 
+                << " + i(" 
+                << std::setw(12) << input_signal_fft[i].imag() 
+                << ")";
+
+        std::cout << "  |  ";
+
+        std::cout << "DFT: ";
+        std::cout << std::setw(12) << result_dft[i].real() 
+                << " + i(" 
+                << std::setw(12) << result_dft[i].imag() 
+                << ")\n";
     }
 
     FFT::parallel_inverse(input_signal_fft);
-    std::cout << "Results (IFFT vs. INPUT):" << std::endl;
+    std::cout << "\nResults (IFFT vs. INPUT):" << std::endl;
+    // Output format: [k] FFT: (real + imag*i) | DFT: (real + imag*i)
     for (size_t i = 0; i < N; ++i) {
-        // Output format: [k] FFT: (real + imag*i) | DFT: (real + imag*i)
-        std::cout << "[" << i << "] IFFT: " << input_signal_fft[i] 
-                  << " | INPUT: " << input_signal[i] << "\n";
+        std::cout << "[" << std::setw(2) << i << "] ";
+        std::cout << "IFFT: ";
+        std::cout << std::setw(12) << input_signal_fft[i].real() 
+                << " + i(" 
+                << std::setw(12) << input_signal_fft[i].imag() 
+                << ")";
+
+        std::cout << "  |  ";
+        
+        std::cout << "INPUT: ";
+        std::cout << std::setw(12) << input_signal[i].real() 
+                << " + i(" 
+                << std::setw(12) << input_signal[i].imag() 
+                << ")\n";
     }
     
     std::cout << "\nVerification:\n";
     std::cout << "The FFT results should match the DFT results (within floating-point error)." << std::endl;
     std::cout << "The IFFT results should match the input signal (within floating-point error)." << std::endl;
+}
 
-    //now we test our fft algorithm with a signal represented by a mathematical function 
-    const size_t N2 = 1024;     // Number of samples (must be power of 2)
-    double T_total = 2.0;    // Total duration of the signal (seconds)
-    double dt = T_total / N2; // Sampling interval
+void test_math_function(size_t Nc)
+{   
+    std::cout << "\n====== Mathematical Function Test ======" << std::endl; 
+    double T_total = 2.0;       // Total duration of the signal (seconds)
+    double dt = T_total / Nc;   // Sampling interval
     double a = 5.0;          
 
     // we choose a time domain function: f(t) = e^(-at)
-    auto func = [a](double t) {
-        return std::exp(-a * t);
-    };
+    auto func = [a](double t) {return std::exp(-a * t);};
 
     // we know the frequency domain FT: |F(w)| = 1 / sqrt(a^2 + w^2)
     auto analytical_FT_magnitude = [a](double f) {
@@ -97,8 +143,8 @@ int main(int argc, char* argv[]) {
     };
 
     // sample the function
-    complexVector sampled_signal(N2);
-    for (size_t n = 0; n < N2; n++) {
+    complexVector sampled_signal(Nc);
+    for (size_t n = 0; n < Nc; n++) {
         double t = n * dt;
         sampled_signal[n] = std::complex<double>(func(t), 0.0);
     }
@@ -108,14 +154,14 @@ int main(int argc, char* argv[]) {
     FFT::parallel_iterative(fft_result); 
 
     // compare results
-    std::cout<<"\n FFT vs Analytical FT Comparison \n"
+    std::cout<<"FFT vs Analytical FT Comparison \n"
               << std::left << std::setw(10) << "Freq(Hz)" 
               << std::setw(15) << "FFT (Scaled)" 
               << std::setw(15) << "Analytical FT" 
               << std::setw(15) << "Error" << "\n";
     std::cout << "\n";
 
-    for (size_t k = 0; k <= N2 / 2; k++) {
+    for (size_t k = 0; k <= Nc/2; k++) {
         // Calculate the frequency
         double f = (double)k / T_total; 
 
@@ -133,19 +179,7 @@ int main(int argc, char* argv[]) {
                   << std::setw(15) << std::setprecision(4) << analytical_mag 
                   << std::setw(15) << error << "\n";
     }
-    
-    // === Polynomial multiplication test === 
-    std::cout << "\n=== POLYNOMIAL MULTIPLICATION TEST ===" << std::endl; 
-    const size_t n1 = atoi(argv[1]); 
-    const size_t n2 = atoi(argv[2]); 
-    test_polynomial_multiplication(n1, n2); 
-
-    
-
-    return 0;
 }
- 
-const std::complex<double> I(0.0, 1.0);
 
 /**
  * @brief Generates a vector of random polynomial coefficients.
@@ -263,6 +297,8 @@ void print_polynomial(complexVector p)
  */
 void test_polynomial_multiplication(size_t n1, size_t n2)
 {
+    std::cout << "\n=== POLYNOMIAL MULTIPLICATION TEST ===" << std::endl; 
+
     complexVector poly1 = generate_random_polynomial(n1);    
     complexVector poly2 = generate_random_polynomial(n2);  
     
@@ -306,10 +342,10 @@ void test_polynomial_multiplication(size_t n1, size_t n2)
         std::cout << "Naive multiplication resulting polynomial: "; 
         print_polynomial(naiveC); 
 
+        std::cout << (same_polynomial(C, naiveC) ? "FFT Success!" : "FFT Failed!") << std::endl; 
         std::cout << "\nFFT Time: " << endNaive << std::endl; 
         std::cout << "Naive Multiplication Time: " << endFFT << std::endl << std::endl; 
     }
-    std::cout << (same_polynomial(C, naiveC) ? "FFT Success" : "FFT Failed!") << std::endl; 
 }
 
 
