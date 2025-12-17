@@ -51,7 +51,7 @@ The executable requires **two integer arguments**:
 ./fft <n1> <n2>
 ```
 
-The **input** parameters `n1` and `n2` represent the degrees of the two polynomials
+The **input** parameters `n1` and `n2` represent the sizes of the two polynomials
 used in the final test, which performs polynomial multiplication using FFT.
 
 The **output** produced by the execution consists of the results of some tests performed by the program:

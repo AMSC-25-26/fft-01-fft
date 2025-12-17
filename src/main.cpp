@@ -134,9 +134,7 @@ int main(int argc, char* argv[]) {
                   << std::setw(15) << error << "\n";
     }
 
-    /**
-     * Polynomial multiplication test
-     */
+    // Polynomial multiplication test
     std::cout << "\n=== POLYNOMIAL MULTIPLICATION TEST ===" << std::endl; 
     const size_t n1 = atoi(argv[1]); 
     const size_t n2 = atoi(argv[2]); 
@@ -147,11 +145,19 @@ int main(int argc, char* argv[]) {
  
 const std::complex<double> I(0.0, 1.0);
 
+/**
+ * @brief Generates a vector of random polynomial coefficients.
+ * * Creates a polynomial of size `n` where each coefficient is a complex number 
+ * with a real part uniformly distributed in the range [-20.0, 20.0] 
+ * and a zero imaginary part.
+ * * @param n The number of coefficients of the polynomial to generate.
+ * @return complexVector A vector containing the generated random coefficients.
+ */
 complexVector generate_random_polynomial(size_t n)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-10.0, 10.0);
+    std::uniform_real_distribution<> dis(-20.0, 20.0);
     
     std::vector<complex> poly(n);
     for(size_t i = 0; i < n; ++i) {
@@ -160,6 +166,14 @@ complexVector generate_random_polynomial(size_t n)
     return poly;
 }
 
+/**
+ * @brief Computes the smallest power of two greater than or equal to the input.
+ * * This function iterates to find the nearest upper power of two. 
+ * If @p n is already a power of two, it returns @p n. 
+ * Useful for padding data sizes for algorithms like FFT.
+ * @param n The minimum required size.
+ * @return size_t The calculated power of two (>= n).
+ */
 size_t next_power_of_two(size_t n) {
     size_t power = 1;
     while (power < n) {
@@ -168,6 +182,16 @@ size_t next_power_of_two(size_t n) {
     return power;
 }
 
+/**
+ * @brief Computes the product of two polynomials using direct convolution.
+ * This function performs a naive multiplication by iterating through all pairs 
+ * of coefficients. The operation has a time complexity of O(N * M), where N and M 
+ * are the sizes of the coefficient vectors. 
+ * The resulting vector size is (size of p1 + size of p2 - 1).
+ * @param p1 The vector of coefficients for the first polynomial.
+ * @param p2 The vector of coefficients for the second polynomial.
+ * @return complexVector The coefficients of the resulting product polynomial.
+ */
 complexVector naive_polynomial_multiplication(const complexVector& p1, const complexVector& p2)
 {
     size_t n1 = p1.size();
@@ -182,7 +206,16 @@ complexVector naive_polynomial_multiplication(const complexVector& p1, const com
         
     return C; 
 }
-
+/**
+ * @brief Checks if two polynomials are approximately equal.
+ * * Verifies equality by comparing the polynomial sizes and checking if the 
+ * difference between the real parts of their coefficients is within a 
+ * tolerance of 1.0e-12.
+ * @note This function ignores the imaginary parts of the coefficients.
+ * @param p1 The first polynomial vector.
+ * @param p2 The second polynomial vector.
+ * @return bool True if sizes match and real coefficients are within tolerance, false otherwise.
+ */
 bool same_polynomial(complexVector p1, complexVector p2)
 {
     size_t n1 = p1.size(), n2 = p2.size(); 
@@ -195,23 +228,42 @@ bool same_polynomial(complexVector p1, complexVector p2)
     return true; 
 }
 
+/**
+ * @brief Prints the polynomial to standard output.
+ * Displays the polynomial in the format "c0 + c1x^1 + ... + cNx^N".
+ * Only the real parts of the coefficients are printed.
+ * @param p The polynomial vector to print.
+ */
 void print_polynomial(complexVector p)
 {
     const size_t N = p.size(); 
     if(N > 0) 
     {
         std::cout << p[0].real() << " + "; 
-        for(size_t i = 1; i < N-1; ++i)
+        size_t i; 
+        for(i = 1; i < N-1; ++i)
             std::cout << p[i].real() << "x^" << i << " + "; 
         
-        std::cout << p[N-1].real() << std::endl; 
+        std::cout << p[N-1].real() << "x^" << i << std::endl; 
     }
 }
 
+/**
+ * @brief Validates the FFT-based multiplication against the naive approach.
+ * Generates two random polynomials, multiplies them using both the naive convolution 
+ * method and the FFT-based convolution theorem, and asserts if the results are identical.
+ * Prints both resulting polynomials and a success/failure message to stdout.
+ * @param n1 Size of the first random polynomial.
+ * @param n2 Size of the second random polynomial.
+ */
 void test_polynomial_multiplication(size_t n1, size_t n2)
 {
     complexVector poly1 = generate_random_polynomial(n1);    
-    complexVector poly2 = generate_random_polynomial(n2);    
+    complexVector poly2 = generate_random_polynomial(n2);  
+    std::cout << "P1(x) = "; 
+    print_polynomial(poly1); 
+    std::cout << "P2(x) = "; 
+    print_polynomial(poly2); 
     complexVector naiveC = naive_polynomial_multiplication(poly1, poly2); 
     
     size_t final_size = n1 + n2 - 1; 
@@ -228,14 +280,21 @@ void test_polynomial_multiplication(size_t n1, size_t n2)
     FFT::parallel_inverse(C); 
 
     C.resize(final_size); 
-    std::cout << "FFT multiplication resulting polynomial: " << std::endl; 
+    std::cout << "\nFFT multiplication resulting polynomial: "; 
     print_polynomial(C); 
-    std::cout << "Naive multiplication resulting polynomial: " << std::endl; 
+    std::cout << "Naive multiplication resulting polynomial: "; 
     print_polynomial(naiveC); 
-    std::cout << (same_polynomial(C, naiveC) ? "Same polynomial - FFT Success" : "Not same polynomial - FFT Failed!") << std::endl; 
+    std::cout << (same_polynomial(C, naiveC) ? "FFT Success" : "FFT Failed!") << std::endl; 
 }
 
-
+/**
+ * @brief Computes the Inverse Discrete Fourier Transform (IDFT) directly.
+ * Uses the direct summation definition to compute the inverse transform. 
+ * Includes the 1/N normalization factor. 
+ * @note This is an O(N^2) operation and is intended for reference or small N only.
+ * @param A The input frequency-domain vector.
+ * @return complexVector The time-domain signal vector.
+ */
 complexVector IDFT_Compute(const complexVector& A) {
     const size_t N = A.size();
     complexVector X(N);
@@ -253,6 +312,13 @@ complexVector IDFT_Compute(const complexVector& A) {
     return X;
 }
 
+/**
+ * @brief Computes the Discrete Fourier Transform (DFT) directly.
+ * Uses the direct summation definition to compute the transform.
+ * @note This is an O(N^2) operation. For large N, use an FFT algorithm.
+ * @param A The input time-domain signal vector.
+ * @return complexVector The frequency-domain vector.
+ */
 complexVector DFT_Compute(const complexVector& A) {
     size_t N = A.size();
     complexVector X(N);
@@ -267,4 +333,3 @@ complexVector DFT_Compute(const complexVector& A) {
     }
     return X;
 }
-
