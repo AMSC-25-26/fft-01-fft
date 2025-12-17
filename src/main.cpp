@@ -4,7 +4,11 @@
 #include <complex>
 #include <iomanip>
 #include <random>
+#include <fstream>
+#include <ctime>
 #include "FFT.hpp"
+
+#define THR 9
 
 using complex = std::complex<double>; 
 using complexVector = std::vector<complex>; 
@@ -59,8 +63,8 @@ int main(int argc, char* argv[]) {
     std::cout << "Results (FFT vs. DFT):" << std::endl;
     for (size_t i = 0; i < N; ++i) {
         // Output format: [k] FFT: (real + imag*i) | DFT: (real + imag*i)
-        std::cout << "[" << i << "] FFT: " << input_signal_fft[i] 
-                  << " | DFT: " << result_dft[i] << "\n";
+        std::cout << "[" << i << "] FFT: " << input_signal_fft[i]
+                  << "\t| DFT: " << result_dft[i] << "\n";
     }
 
     FFT::parallel_inverse(input_signal_fft);
@@ -76,14 +80,11 @@ int main(int argc, char* argv[]) {
     std::cout << "The IFFT results should match the input signal (within floating-point error)." << std::endl;
 
     //now we test our fft algorithm with a signal represented by a mathematical function 
-
     const size_t N2 = 1024;     // Number of samples (must be power of 2)
     double T_total = 2.0;    // Total duration of the signal (seconds)
     double dt = T_total / N2; // Sampling interval
     double a = 5.0;          
 
-
-    
     // we choose a time domain function: f(t) = e^(-at)
     auto func = [a](double t) {
         return std::exp(-a * t);
@@ -105,8 +106,7 @@ int main(int argc, char* argv[]) {
     // compute fft
     complexVector fft_result = sampled_signal;
     FFT::parallel_iterative(fft_result); 
-    
-    
+
     // compare results
     std::cout<<"\n FFT vs Analytical FT Comparison \n"
               << std::left << std::setw(10) << "Freq(Hz)" 
@@ -133,13 +133,15 @@ int main(int argc, char* argv[]) {
                   << std::setw(15) << std::setprecision(4) << analytical_mag 
                   << std::setw(15) << error << "\n";
     }
-
-    // Polynomial multiplication test
+    
+    // === Polynomial multiplication test === 
     std::cout << "\n=== POLYNOMIAL MULTIPLICATION TEST ===" << std::endl; 
     const size_t n1 = atoi(argv[1]); 
     const size_t n2 = atoi(argv[2]); 
     test_polynomial_multiplication(n1, n2); 
+
     
+
     return 0;
 }
  
@@ -222,7 +224,7 @@ bool same_polynomial(complexVector p1, complexVector p2)
     if(n1 != n2) 
         return false;
     for(size_t i = 0; i < n1; ++i)
-        if(double(abs(p1[i].real() - p2[i].real())) > 1.0e-12)
+        if(double(abs(p1[i].real() - p2[i].real())) > 1.e-12)
             return false; 
 
     return true; 
@@ -237,6 +239,9 @@ bool same_polynomial(complexVector p1, complexVector p2)
 void print_polynomial(complexVector p)
 {
     const size_t N = p.size(); 
+
+    // Conditional statement to avoid redundant prints 
+    if(N >= THR) return; 
     if(N > 0) 
     {
         std::cout << p[0].real() << " + "; 
@@ -260,16 +265,26 @@ void test_polynomial_multiplication(size_t n1, size_t n2)
 {
     complexVector poly1 = generate_random_polynomial(n1);    
     complexVector poly2 = generate_random_polynomial(n2);  
-    std::cout << "P1(x) = "; 
-    print_polynomial(poly1); 
-    std::cout << "P2(x) = "; 
-    print_polynomial(poly2); 
-    complexVector naiveC = naive_polynomial_multiplication(poly1, poly2); 
     
+    // Conditional statement to avoid redundant prints 
+    if(n1 < THR && n2 < THR)
+    {
+        std::cout << "P1(x) = "; 
+        print_polynomial(poly1); 
+        std::cout << "P2(x) = "; 
+        print_polynomial(poly2); 
+    }
+
+    clock_t initNaive = clock(); 
+    complexVector naiveC = naive_polynomial_multiplication(poly1, poly2); 
+    clock_t endNaive = clock() - initNaive; 
+
     size_t final_size = n1 + n2 - 1; 
     size_t nC = next_power_of_two(final_size); 
     poly1.resize(nC, {0, 0}); 
     poly2.resize(nC, {0, 0}); 
+
+    clock_t initFFT = clock(); 
     FFT::parallel_iterative(poly1); 
     FFT::parallel_iterative(poly2); 
 
@@ -278,14 +293,25 @@ void test_polynomial_multiplication(size_t n1, size_t n2)
         C[i] = poly1[i] * poly2[i];     
 
     FFT::parallel_inverse(C); 
+    clock_t endFFT = clock() - initFFT; 
 
     C.resize(final_size); 
-    std::cout << "\nFFT multiplication resulting polynomial: "; 
-    print_polynomial(C); 
-    std::cout << "Naive multiplication resulting polynomial: "; 
-    print_polynomial(naiveC); 
+    
+    // Conditional statement to avoid redundant prints 
+    if(final_size < THR) 
+    {
+        std::cout << "\nFFT multiplication resulting polynomial: "; 
+        print_polynomial(C); 
+    
+        std::cout << "Naive multiplication resulting polynomial: "; 
+        print_polynomial(naiveC); 
+
+        std::cout << "\nFFT Time: " << endNaive << std::endl; 
+        std::cout << "Naive Multiplication Time: " << endFFT << std::endl << std::endl; 
+    }
     std::cout << (same_polynomial(C, naiveC) ? "FFT Success" : "FFT Failed!") << std::endl; 
 }
+
 
 /**
  * @brief Computes the Inverse Discrete Fourier Transform (IDFT) directly.
@@ -319,7 +345,8 @@ complexVector IDFT_Compute(const complexVector& A) {
  * @param A The input time-domain signal vector.
  * @return complexVector The frequency-domain vector.
  */
-complexVector DFT_Compute(const complexVector& A) {
+complexVector DFT_Compute(const complexVector& A) 
+{
     size_t N = A.size();
     complexVector X(N);
 
@@ -331,5 +358,5 @@ complexVector DFT_Compute(const complexVector& A) {
             X[k] += A[n] * W;
         }
     }
-    return X;
+    return X; 
 }
