@@ -92,7 +92,7 @@ void test_n_point(size_t N)
                 << std::setw(12) << input_signal_fft[i].imag() 
                 << ")";
 
-        std::cout << "  |  ";
+        std::cout << "   |  ";
 
         std::cout << "DFT: ";
         std::cout << std::setw(12) << result_dft[i].real() 
@@ -126,6 +126,7 @@ void test_n_point(size_t N)
     std::cout << "The IFFT results should match the input signal (within floating-point error)." << std::endl;
 }
 
+// ========= TEST 2 =========
 void test_math_function(size_t Nc)
 {   
     std::cout << "\n====== Mathematical Function Test ======" << std::endl; 
@@ -181,6 +182,7 @@ void test_math_function(size_t Nc)
     }
 }
 
+// ========= TEST 3 =========
 /**
  * @brief Generates a vector of random polynomial coefficients.
  * * Creates a polynomial of size `n` where each coefficient is a complex number 
@@ -343,9 +345,9 @@ void test_polynomial_multiplication(size_t n1, size_t n2)
         print_polynomial(naiveC); 
 
         std::cout << (same_polynomial(C, naiveC) ? "FFT Success!" : "FFT Failed!") << std::endl; 
-        std::cout << "\nFFT Time: " << endNaive << std::endl; 
-        std::cout << "Naive Multiplication Time: " << endFFT << std::endl << std::endl; 
     }
+    std::cout << "\nFFT Time: " << endNaive << std::endl; 
+    std::cout << "Naive Multiplication Time: " << endFFT << std::endl << std::endl; 
 }
 
 

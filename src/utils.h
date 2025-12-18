@@ -34,4 +34,4 @@ void applyBitReversalPermutation(std::vector<T>& input_vector) {
         }
     }
 }
-#endif 
+#endif
