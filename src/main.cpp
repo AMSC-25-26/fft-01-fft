@@ -6,6 +6,7 @@
 #include <random>
 #include <fstream>
 #include <ctime>
+#include <omp.h>
 #include "FFT.hpp"
 
 #define THR 9
@@ -126,6 +127,35 @@ void test_n_point(size_t N)
 }
 
 // ========= TEST 2 =========
+
+
+void export_to_csv(const std::string& filename, const complexVector& time_signal, const complexVector& freq_signal, double T_total) 
+{
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        return;
+    }
+
+    size_t N = time_signal.size();
+    double dt = T_total / N;
+
+    file << "time,signal_real,frequency,fft_magnitude\n";
+
+    for (size_t i = 0; i < N / 2; ++i) {
+        double t = i * dt;
+        double f = (double)i / T_total;
+        
+        double mag = std::abs(freq_signal[i]) * dt; 
+
+        file << t << "," 
+             << time_signal[i].real() << "," 
+             << f << "," 
+             << mag << "\n";
+    }
+
+    file.close();
+}
+
 void test_math_function(size_t Nc)
 {   
     std::cout << "\n====== Mathematical Function Test ======" << std::endl; 
@@ -152,6 +182,8 @@ void test_math_function(size_t Nc)
     // compute fft
     complexVector fft_result = sampled_signal;
     FFT::parallel_iterative(fft_result); 
+    
+    export_to_csv(std::string("fft_data-") + std::to_string(Nc) + ".csv", sampled_signal, fft_result, T_total);
 
     // compare results
     std::cout<<"FFT vs Analytical FT Comparison \n"
@@ -322,8 +354,8 @@ void test_polynomial_multiplication(size_t n1, size_t n2)
     poly2.resize(nC, {0, 0}); 
 
     clock_t initFFT = clock(); 
-    FFT::recursive(poly1); 
-    FFT::recursive(poly2); 
+    FFT::parallel_iterative(poly1); 
+    FFT::parallel_iterative(poly2); 
 
     complexVector C(nC); 
     for(size_t i = 0; i < nC; ++i)
@@ -342,11 +374,10 @@ void test_polynomial_multiplication(size_t n1, size_t n2)
     
         std::cout << "Naive multiplication resulting polynomial: "; 
         print_polynomial(naiveC); 
-
-        std::cout << (same_polynomial(C, naiveC) ? "FFT Success!" : "FFT Failed!") << std::endl; 
     }
-    std::cout << "\nFFT Time: " << endNaive << std::endl; 
-    std::cout << "Naive Multiplication Time: " << endFFT << std::endl << std::endl; 
+    std::cout << (same_polynomial(C, naiveC) ? "FFT Success!" : "FFT Failed!") << std::endl; 
+    std::cout << "\nFFT Time: " << endFFT << std::endl; 
+    std::cout << "Naive Multiplication Time: " << endNaive << std::endl << std::endl; 
 }
 
 
