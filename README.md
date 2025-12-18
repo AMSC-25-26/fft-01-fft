@@ -51,7 +51,7 @@ The executable requires **two integer arguments**:
 ./fft <n1> <n2> <n3> <n4>
 ```
 - n1 represents the size of the signal for the Test 1: Generation of a Random Signal. (required: n1 must be in the form $2^N$)
-- n2 represetns the sample rate for the Test 2: FFT of the mathematical function $e^-{at}$ (required: n2 must be in the form $2^N$)
+- n2 represetns the sample rate for the Test 2: FFT of the mathematical function $e^{-at}$ (required: n2 must be in the form $2^N$)
 - n3 and n4 represent the sizes of the two polynomials used in the Test 3: Polynomial Multiplication
 
 The **output** produced by the execution consists of the results of some tests performed by the program:
