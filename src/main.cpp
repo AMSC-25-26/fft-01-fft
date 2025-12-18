@@ -38,7 +38,6 @@ int main(int argc, char* argv[]) {
     const size_t n2 = atoi(argv[4]); 
     test_polynomial_multiplication(n1, n2); 
     
-
     return 0;
 }
  
@@ -323,8 +322,8 @@ void test_polynomial_multiplication(size_t n1, size_t n2)
     poly2.resize(nC, {0, 0}); 
 
     clock_t initFFT = clock(); 
-    FFT::parallel_iterative(poly1); 
-    FFT::parallel_iterative(poly2); 
+    FFT::recursive(poly1); 
+    FFT::recursive(poly2); 
 
     complexVector C(nC); 
     for(size_t i = 0; i < nC; ++i)

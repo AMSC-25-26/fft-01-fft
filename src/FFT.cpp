@@ -6,50 +6,20 @@ using namespace std::complex_literals;
 
 namespace FFT
 {
+
     /**
-     * Recursive version of the Cooley-Tukey FFT Algorithm
-     * @note    The input vector's size must be a power of 2. 
-     * @param A The input vector which represents the sampled 
-     *          values of an arbitrary signal (time domain). 
-     * 
-     * @return  The vector of coefficients yielded from the 
-     *          Discrete Fourier Transform of the input signal (frequency domain). 
+     * Recursive version of the Cooley-Tukey FFT Algorithm (Void / In-Place style)
+     * @param A The input/output vector. 
+     * Input: sampled values (time domain).
+     * Output: DFT coefficients (frequency domain).
      */
-    std::vector<complex> recursive(const std::vector<complex> &A) {
-        /**
-         * Size of the input vector in the complex set. 
-         */
-        complex N = A.size();
+    void recursive(std::vector<complex> &A) {
+        int n = A.size();
+        if (n <= 1) return;
 
-        /**
-         * Size of the input vector in the real set. 
-         */
-        int n = A.size(); 
-
-        /**
-         * Base case: stopping criteria of the recursive iteration. 
-         */ 
-        if (n == 1) return A;
-
-        /**
-         * Principal N-th root of unity
-         */
-        complex Wn = std::exp((-2.0 * M_PI * 1i) / N);
-
-        /**
-         * Current twiddle factor. 
-         * Initialized to 1 (angle of 0 degrees)
-         */
-        std::complex<double> W = 1;
-
-        /**
-         * Declaration of two empty vectors for the Divide Et Impera procedure. 
-         * 1. A_even: coefficients corresponding to the even indices
-         * 2. A_odd:  coefficients corresponding to the odd indices           
-         */
-        std::vector<std::complex<double>> A_even;
+        std::vector<complex> A_even;
         A_even.reserve(n/2);
-        std::vector<std::complex<double>> A_odd;
+        std::vector<complex> A_odd;
         A_odd.reserve(n/2);
 
         for (int i = 0; i < n / 2; i++) {
@@ -57,26 +27,20 @@ namespace FFT
             A_odd.emplace_back(A[2 * i + 1]);
         }
 
-        /**
-         * Recursive step
-         */
-        std::vector<std::complex<double>> Y_even = recursive(A_even);
-        std::vector<std::complex<double>> Y_odd = recursive(A_odd);
+        recursive(A_even);
+        recursive(A_odd);
 
-        /**
-         * Merging phase: recombining the results using the Butterfly operations
-         */
-        std::vector<std::complex<double>> Y(n); 
+        complex Wn = std::exp((-2.0 * M_PI * 1i) / static_cast<double>(n));
+        complex W = 1.0;
+
         for (int j = 0; j < n / 2; j++) {
-            std::complex<double> u = Y_even[j];
-            std::complex<double> v = W * Y_odd[j];
+            complex u = A_even[j];
+            complex v = W * A_odd[j];
             
-            Y[j] = u + v;
-            Y[j + n / 2] = u - v;
+            A[j] = u + v;
+            A[j + n / 2] = u - v;
             W *= Wn;
         }
-
-        return Y;
     }
 
     /**
