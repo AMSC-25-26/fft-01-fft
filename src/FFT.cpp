@@ -206,8 +206,17 @@ namespace FFT
         constexpr double theta = -2 * M_PI;
         const int log2N = static_cast<int>(std::log2(N));
 
+
         applyBitReversalPermutation(A);
 
+
+        /**
+        * Parallel region is defined before the outer loop to 
+        * avoid the overhead of creating and destroying threads
+        * at each iteration of the outer loop.
+         */
+        #pragma omp parallel
+        {
         for (int k = 1; k <= log2N; ++k) { 
             const int m = 1 << k; 
             const size_t mid = m >> 1;
@@ -234,6 +243,7 @@ namespace FFT
             }         
         }
     }
+    }
 
     /**
      * Parallel implementation of the Cooley-Tukey Inverse FFT Algorithm.
@@ -251,13 +261,15 @@ namespace FFT
 
         applyBitReversalPermutation(A);
 
+        #pragma omp parallel
+        {
         for (int k = 1; k <= log2N; ++k) { 
             const int m = 1 << k;
             const size_t mid = m >> 1;
 
             std::complex<double> wm = std::polar(1.0, theta / static_cast<double> (m));
 
-            #pragma omp parallel for schedule(static)
+            #pragma omp for schedule(static)
             for (size_t r = 0; r < N; r += m) {
                 std::complex<double> w{1.0, 0};
                 for (size_t j = 0; j < mid; ++j) {    
@@ -272,10 +284,13 @@ namespace FFT
         }
         /**
          * Parallelization of the normalization step.
+         * we  use nowait to avoid te implicit barrier
+         * since this is the last operation in the parallel region.
          */
-        #pragma omp parallel for schedule(static)
+        #pragma omp for schedule(static) nowait
         for (size_t i = 0; i < N; ++i) {
             A[i] /= N;
         }
     }
+}
 }
