@@ -376,8 +376,7 @@ void test_polynomial_multiplication(size_t n1, size_t n2)
         print_polynomial(naiveC); 
     }
     std::cout << (same_polynomial(C, naiveC) ? "FFT Success!" : "FFT Failed!") << std::endl; 
-    std::cout << "\nFFT Time: " << endFFT << std::endl; 
-    std::cout << "Naive Multiplication Time: " << endNaive << std::endl << std::endl; 
+
 }
 
 

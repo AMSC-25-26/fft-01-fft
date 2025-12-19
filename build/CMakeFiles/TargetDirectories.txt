@@ -1,3 +1,0 @@
-/home/francesco/fft-01-fft/build/CMakeFiles/fft.dir
-/home/francesco/fft-01-fft/build/CMakeFiles/edit_cache.dir
-/home/francesco/fft-01-fft/build/CMakeFiles/rebuild_cache.dir
